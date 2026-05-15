@@ -9,38 +9,127 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as AuthedRouteImport } from './routes/_authed'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthedRosterRouteImport } from './routes/_authed.roster'
+import { Route as AuthedAlertsRouteImport } from './routes/_authed.alerts'
+import { Route as AuthedPlayerFidRouteImport } from './routes/_authed.player.$fid'
+import { Route as ApiPublicHooksDailySnapshotRouteImport } from './routes/api/public/hooks/daily-snapshot'
 
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthedRoute = AuthedRouteImport.update({
+  id: '/_authed',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthedRosterRoute = AuthedRosterRouteImport.update({
+  id: '/roster',
+  path: '/roster',
+  getParentRoute: () => AuthedRoute,
+} as any)
+const AuthedAlertsRoute = AuthedAlertsRouteImport.update({
+  id: '/alerts',
+  path: '/alerts',
+  getParentRoute: () => AuthedRoute,
+} as any)
+const AuthedPlayerFidRoute = AuthedPlayerFidRouteImport.update({
+  id: '/player/$fid',
+  path: '/player/$fid',
+  getParentRoute: () => AuthedRoute,
+} as any)
+const ApiPublicHooksDailySnapshotRoute =
+  ApiPublicHooksDailySnapshotRouteImport.update({
+    id: '/api/public/hooks/daily-snapshot',
+    path: '/api/public/hooks/daily-snapshot',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/login': typeof LoginRoute
+  '/alerts': typeof AuthedAlertsRoute
+  '/roster': typeof AuthedRosterRoute
+  '/player/$fid': typeof AuthedPlayerFidRoute
+  '/api/public/hooks/daily-snapshot': typeof ApiPublicHooksDailySnapshotRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/login': typeof LoginRoute
+  '/alerts': typeof AuthedAlertsRoute
+  '/roster': typeof AuthedRosterRoute
+  '/player/$fid': typeof AuthedPlayerFidRoute
+  '/api/public/hooks/daily-snapshot': typeof ApiPublicHooksDailySnapshotRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authed': typeof AuthedRouteWithChildren
+  '/login': typeof LoginRoute
+  '/_authed/alerts': typeof AuthedAlertsRoute
+  '/_authed/roster': typeof AuthedRosterRoute
+  '/_authed/player/$fid': typeof AuthedPlayerFidRoute
+  '/api/public/hooks/daily-snapshot': typeof ApiPublicHooksDailySnapshotRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/login'
+    | '/alerts'
+    | '/roster'
+    | '/player/$fid'
+    | '/api/public/hooks/daily-snapshot'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/login'
+    | '/alerts'
+    | '/roster'
+    | '/player/$fid'
+    | '/api/public/hooks/daily-snapshot'
+  id:
+    | '__root__'
+    | '/'
+    | '/_authed'
+    | '/login'
+    | '/_authed/alerts'
+    | '/_authed/roster'
+    | '/_authed/player/$fid'
+    | '/api/public/hooks/daily-snapshot'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthedRoute: typeof AuthedRouteWithChildren
+  LoginRoute: typeof LoginRoute
+  ApiPublicHooksDailySnapshotRoute: typeof ApiPublicHooksDailySnapshotRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authed': {
+      id: '/_authed'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,22 +137,58 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authed/roster': {
+      id: '/_authed/roster'
+      path: '/roster'
+      fullPath: '/roster'
+      preLoaderRoute: typeof AuthedRosterRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/alerts': {
+      id: '/_authed/alerts'
+      path: '/alerts'
+      fullPath: '/alerts'
+      preLoaderRoute: typeof AuthedAlertsRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/player/$fid': {
+      id: '/_authed/player/$fid'
+      path: '/player/$fid'
+      fullPath: '/player/$fid'
+      preLoaderRoute: typeof AuthedPlayerFidRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/api/public/hooks/daily-snapshot': {
+      id: '/api/public/hooks/daily-snapshot'
+      path: '/api/public/hooks/daily-snapshot'
+      fullPath: '/api/public/hooks/daily-snapshot'
+      preLoaderRoute: typeof ApiPublicHooksDailySnapshotRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
+interface AuthedRouteChildren {
+  AuthedAlertsRoute: typeof AuthedAlertsRoute
+  AuthedRosterRoute: typeof AuthedRosterRoute
+  AuthedPlayerFidRoute: typeof AuthedPlayerFidRoute
+}
+
+const AuthedRouteChildren: AuthedRouteChildren = {
+  AuthedAlertsRoute: AuthedAlertsRoute,
+  AuthedRosterRoute: AuthedRosterRoute,
+  AuthedPlayerFidRoute: AuthedPlayerFidRoute,
+}
+
+const AuthedRouteWithChildren =
+  AuthedRoute._addFileChildren(AuthedRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthedRoute: AuthedRouteWithChildren,
+  LoginRoute: LoginRoute,
+  ApiPublicHooksDailySnapshotRoute: ApiPublicHooksDailySnapshotRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
