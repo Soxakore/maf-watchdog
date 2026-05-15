@@ -14,7 +14,136 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      alerts: {
+        Row: {
+          alert_type: string
+          created_at: string
+          fid: number
+          id: string
+          is_read: boolean
+          message: string
+          new_value: string | null
+          old_value: string | null
+        }
+        Insert: {
+          alert_type: string
+          created_at?: string
+          fid: number
+          id?: string
+          is_read?: boolean
+          message: string
+          new_value?: string | null
+          old_value?: string | null
+        }
+        Update: {
+          alert_type?: string
+          created_at?: string
+          fid?: number
+          id?: string
+          is_read?: boolean
+          message?: string
+          new_value?: string | null
+          old_value?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "alerts_fid_fkey"
+            columns: ["fid"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["fid"]
+          },
+        ]
+      }
+      players: {
+        Row: {
+          added_by: string | null
+          alliance: string | null
+          avatar_image: string | null
+          created_at: string
+          fid: number
+          furnace_level: number | null
+          is_active: boolean
+          last_api_status: string | null
+          last_checked_at: string | null
+          nickname: string | null
+          notes: string | null
+          power: number | null
+          state: number | null
+        }
+        Insert: {
+          added_by?: string | null
+          alliance?: string | null
+          avatar_image?: string | null
+          created_at?: string
+          fid: number
+          furnace_level?: number | null
+          is_active?: boolean
+          last_api_status?: string | null
+          last_checked_at?: string | null
+          nickname?: string | null
+          notes?: string | null
+          power?: number | null
+          state?: number | null
+        }
+        Update: {
+          added_by?: string | null
+          alliance?: string | null
+          avatar_image?: string | null
+          created_at?: string
+          fid?: number
+          furnace_level?: number | null
+          is_active?: boolean
+          last_api_status?: string | null
+          last_checked_at?: string | null
+          nickname?: string | null
+          notes?: string | null
+          power?: number | null
+          state?: number | null
+        }
+        Relationships: []
+      }
+      snapshots: {
+        Row: {
+          alliance: string | null
+          captured_at: string
+          fid: number
+          furnace_level: number | null
+          id: string
+          nickname: string | null
+          power: number | null
+          state: number | null
+        }
+        Insert: {
+          alliance?: string | null
+          captured_at?: string
+          fid: number
+          furnace_level?: number | null
+          id?: string
+          nickname?: string | null
+          power?: number | null
+          state?: number | null
+        }
+        Update: {
+          alliance?: string | null
+          captured_at?: string
+          fid?: number
+          furnace_level?: number | null
+          id?: string
+          nickname?: string | null
+          power?: number | null
+          state?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "snapshots_fid_fkey"
+            columns: ["fid"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["fid"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
