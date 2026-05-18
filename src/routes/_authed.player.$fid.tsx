@@ -32,14 +32,17 @@ function PlayerPage() {
   useEffect(() => {
     if (data?.player) {
       setAlliance(data.player.alliance ?? "");
-      setPower(data.player.power ? String(data.player.power) : "");
+      setPower(data.player.power != null ? String(data.player.power) : "");
       setNotes(data.player.notes ?? "");
     }
   }, [data]);
 
   const refreshMut = useMutation({
     mutationFn: () => refresh({ data: { fid: Number(fid) } as never }),
-    onSuccess: () => { toast.success("Refreshed"); qc.invalidateQueries({ queryKey: ["player", fid] }); },
+    onSuccess: () => {
+      toast.success("Refreshed");
+      qc.invalidateQueries({ queryKey: ["player", fid] });
+    },
   });
 
   const updateMut = useMutation({
@@ -68,7 +71,10 @@ function PlayerPage() {
 
   return (
     <div className="space-y-6">
-      <Link to="/roster" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+      <Link
+        to="/roster"
+        className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+      >
         <ArrowLeft className="size-4" /> Back to roster
       </Link>
 
@@ -79,23 +85,40 @@ function PlayerPage() {
             <span className="font-mono text-muted-foreground">FID {p.fid}</span>
             <Badge variant={offState ? "destructive" : "secondary"}>State {p.state}</Badge>
             <Badge variant="secondary">FC {p.furnace_level}</Badge>
-            {p.alliance && <Badge variant={p.alliance === "MAF" ? "default" : "destructive"}>[{p.alliance}]</Badge>}
+            {p.alliance && (
+              <Badge variant={p.alliance === "MAF" ? "default" : "destructive"}>
+                [{p.alliance}]
+              </Badge>
+            )}
+            {p.power != null && <Badge variant="secondary">Power {p.power.toLocaleString()}</Badge>}
+            {p.api_source && <Badge variant="outline">{p.api_source}</Badge>}
           </div>
         </div>
-        <Button variant="outline" onClick={() => refreshMut.mutate()} disabled={refreshMut.isPending}>
-          <RefreshCw className={`mr-1.5 size-4 ${refreshMut.isPending ? "animate-spin" : ""}`} /> Refresh
+        <Button
+          variant="outline"
+          onClick={() => refreshMut.mutate()}
+          disabled={refreshMut.isPending}
+        >
+          <RefreshCw className={`mr-1.5 size-4 ${refreshMut.isPending ? "animate-spin" : ""}`} />{" "}
+          Refresh
         </Button>
       </div>
 
       <Card className="p-5">
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">Manual stats (alliance + power)</h2>
+        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+          Tracked stats
+        </h2>
         <div className="grid gap-3 md:grid-cols-[140px_180px_1fr_auto] md:items-end">
           <div className="space-y-1.5">
-            <Label>Alliance</Label>
-            <Input value={alliance} onChange={(e) => setAlliance(e.target.value)} placeholder="MAF" />
+            <Label>Alliance fallback</Label>
+            <Input
+              value={alliance}
+              onChange={(e) => setAlliance(e.target.value)}
+              placeholder="MAF"
+            />
           </div>
           <div className="space-y-1.5">
-            <Label>Power</Label>
+            <Label>Power fallback</Label>
             <Input type="number" value={power} onChange={(e) => setPower(e.target.value)} />
           </div>
           <div className="space-y-1.5">
@@ -107,13 +130,16 @@ function PlayerPage() {
           </Button>
         </div>
         <p className="mt-2 text-xs text-muted-foreground">
-          The public WOS API doesn't return alliance/power. Update manually — changes are diffed against history.
+          API values update automatically when available. Fallbacks stay in place when the API does
+          not provide alliance or power.
         </p>
       </Card>
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Card className="p-0">
-          <h2 className="border-b border-border px-4 py-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">Snapshot history</h2>
+          <h2 className="border-b border-border px-4 py-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+            Snapshot history
+          </h2>
           <div className="max-h-96 overflow-auto">
             <table className="w-full text-sm">
               <thead className="sticky top-0 bg-card text-left text-xs uppercase text-muted-foreground">
@@ -128,15 +154,31 @@ function PlayerPage() {
               <tbody className="divide-y divide-border">
                 {data.snapshots.map((s) => (
                   <tr key={s.id}>
-                    <td className="px-3 py-2 text-xs text-muted-foreground">{new Date(s.captured_at).toLocaleString()}</td>
+                    <td className="px-3 py-2 text-xs text-muted-foreground">
+                      {new Date(s.captured_at).toLocaleString()}
+                    </td>
                     <td className="px-3 py-2 font-mono">{s.state ?? "—"}</td>
                     <td className="px-3 py-2 font-mono">{s.furnace_level ?? "—"}</td>
-                    <td className="px-3 py-2">{s.alliance ?? "—"}</td>
-                    <td className="px-3 py-2 font-mono text-xs">{s.power ? s.power.toLocaleString() : "—"}</td>
+                    <td className="px-3 py-2">
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <span>{s.alliance ?? "—"}</span>
+                        {s.alliance_source && <Badge variant="outline">{s.alliance_source}</Badge>}
+                      </div>
+                    </td>
+                    <td className="px-3 py-2 font-mono text-xs">
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <span>{s.power != null ? s.power.toLocaleString() : "—"}</span>
+                        {s.power_source && <Badge variant="outline">{s.power_source}</Badge>}
+                      </div>
+                    </td>
                   </tr>
                 ))}
                 {data.snapshots.length === 0 && (
-                  <tr><td colSpan={5} className="px-3 py-6 text-center text-muted-foreground">No history yet.</td></tr>
+                  <tr>
+                    <td colSpan={5} className="px-3 py-6 text-center text-muted-foreground">
+                      No history yet.
+                    </td>
+                  </tr>
                 )}
               </tbody>
             </table>
@@ -144,13 +186,17 @@ function PlayerPage() {
         </Card>
 
         <Card className="p-0">
-          <h2 className="border-b border-border px-4 py-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">Alerts</h2>
+          <h2 className="border-b border-border px-4 py-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+            Alerts
+          </h2>
           <div className="max-h-96 overflow-auto">
             <ul className="divide-y divide-border">
               {data.alerts.map((a) => (
                 <li key={a.id} className="px-4 py-3">
                   <div className="text-sm">{a.message}</div>
-                  <div className="mt-0.5 text-xs text-muted-foreground">{new Date(a.created_at).toLocaleString()}</div>
+                  <div className="mt-0.5 text-xs text-muted-foreground">
+                    {new Date(a.created_at).toLocaleString()}
+                  </div>
                 </li>
               ))}
               {data.alerts.length === 0 && (

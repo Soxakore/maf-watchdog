@@ -1,10 +1,45 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { fetchWosPlayer } from "./wos.server";
+import { fetchWosPlayer, type WosPlayerData } from "./wos.server";
 import { snapshotAndDiff } from "./snapshot.server";
 
 export const TARGET_STATE = 4285;
+
+function valueOrNull(value: string | null | undefined): string | null {
+  const trimmed = value?.trim();
+  return trimmed ? trimmed : null;
+}
+
+function playerStatsFromApi(
+  player: WosPlayerData,
+  fallback: {
+    alliance?: string | null;
+    power?: number | null;
+    alliance_source?: string | null;
+    power_source?: string | null;
+  },
+) {
+  const apiAlliance = valueOrNull(player.alliance);
+  const fallbackAlliance = valueOrNull(fallback.alliance);
+  const hasApiPower = player.power != null;
+  const hasFallbackPower = fallback.power != null;
+
+  return {
+    alliance: apiAlliance ?? fallbackAlliance,
+    power: hasApiPower ? player.power! : hasFallbackPower ? fallback.power! : null,
+    alliance_source: apiAlliance
+      ? "api"
+      : fallbackAlliance
+        ? (fallback.alliance_source ?? "manual")
+        : null,
+    power_source: hasApiPower
+      ? "api"
+      : hasFallbackPower
+        ? (fallback.power_source ?? "manual")
+        : null,
+  };
+}
 
 export const addPlayer = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -26,6 +61,10 @@ export const addPlayer = createServerFn({ method: "POST" })
       return { ok: false, status: result.status };
     }
     const p = result.data;
+    const stats = playerStatsFromApi(p, {
+      alliance: data.alliance ?? null,
+      power: data.power ?? null,
+    });
 
     const { error: upsertErr } = await supabase.from("players").upsert(
       {
@@ -34,8 +73,12 @@ export const addPlayer = createServerFn({ method: "POST" })
         state: p.kid,
         furnace_level: p.stove_lv,
         avatar_image: p.avatar_image ?? null,
-        alliance: data.alliance ?? null,
-        power: data.power ?? null,
+        alliance: stats.alliance,
+        power: stats.power,
+        alliance_source: stats.alliance_source,
+        power_source: stats.power_source,
+        api_source: p.source,
+        api_profile: p.api_profile,
         notes: data.notes ?? null,
         added_by: userId,
         last_checked_at: new Date().toISOString(),
@@ -50,8 +93,12 @@ export const addPlayer = createServerFn({ method: "POST" })
       nickname: p.nickname,
       state: p.kid,
       furnace_level: p.stove_lv,
-      alliance: data.alliance ?? null,
-      power: data.power ?? null,
+      alliance: stats.alliance,
+      power: stats.power,
+      alliance_source: stats.alliance_source,
+      power_source: stats.power_source,
+      api_source: p.source,
+      api_profile: p.api_profile,
     });
 
     return { ok: true, status: "ok", fid: p.fid, nickname: p.nickname, state: p.kid };
@@ -64,7 +111,7 @@ export const refreshPlayer = createServerFn({ method: "POST" })
     const { supabase } = context;
     const { data: existing } = await supabase
       .from("players")
-      .select("alliance, power")
+      .select("alliance, power, alliance_source, power_source")
       .eq("fid", data.fid)
       .single();
 
@@ -77,6 +124,7 @@ export const refreshPlayer = createServerFn({ method: "POST" })
       return { ok: false, status: result.status };
     }
     const p = result.data;
+    const stats = playerStatsFromApi(p, existing ?? {});
 
     await supabase
       .from("players")
@@ -85,6 +133,12 @@ export const refreshPlayer = createServerFn({ method: "POST" })
         state: p.kid,
         furnace_level: p.stove_lv,
         avatar_image: p.avatar_image ?? null,
+        alliance: stats.alliance,
+        power: stats.power,
+        alliance_source: stats.alliance_source,
+        power_source: stats.power_source,
+        api_source: p.source,
+        api_profile: p.api_profile,
         last_checked_at: new Date().toISOString(),
         last_api_status: "ok",
       })
@@ -94,8 +148,12 @@ export const refreshPlayer = createServerFn({ method: "POST" })
       nickname: p.nickname,
       state: p.kid,
       furnace_level: p.stove_lv,
-      alliance: existing?.alliance ?? null,
-      power: existing?.power ?? null,
+      alliance: stats.alliance,
+      power: stats.power,
+      alliance_source: stats.alliance_source,
+      power_source: stats.power_source,
+      api_source: p.source,
+      api_profile: p.api_profile,
     });
 
     return { ok: true, status: "ok" };
@@ -117,7 +175,7 @@ export const updateManualStats = createServerFn({ method: "POST" })
     const { supabase } = context;
     const { data: existing } = await supabase
       .from("players")
-      .select("nickname, state, furnace_level")
+      .select("nickname, state, furnace_level, api_source, api_profile")
       .eq("fid", data.fid)
       .single();
     if (!existing) throw new Error("Player not found");
@@ -127,6 +185,8 @@ export const updateManualStats = createServerFn({ method: "POST" })
       .update({
         alliance: data.alliance,
         power: data.power,
+        alliance_source: data.alliance ? "manual" : null,
+        power_source: data.power != null ? "manual" : null,
         notes: data.notes ?? null,
       })
       .eq("fid", data.fid);
@@ -137,6 +197,10 @@ export const updateManualStats = createServerFn({ method: "POST" })
       furnace_level: existing.furnace_level,
       alliance: data.alliance,
       power: data.power,
+      alliance_source: data.alliance ? "manual" : null,
+      power_source: data.power != null ? "manual" : null,
+      api_source: existing.api_source,
+      api_profile: existing.api_profile ?? {},
     });
     return { ok: true };
   });
@@ -198,9 +262,7 @@ export const listAlerts = createServerFn({ method: "GET" })
 export const markAlertRead = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input) =>
-    z
-      .object({ id: z.string().uuid().optional(), allRead: z.boolean().optional() })
-      .parse(input),
+    z.object({ id: z.string().uuid().optional(), allRead: z.boolean().optional() }).parse(input),
   )
   .handler(async ({ data, context }) => {
     if (data.allRead) {

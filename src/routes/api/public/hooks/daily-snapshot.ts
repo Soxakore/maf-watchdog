@@ -9,7 +9,7 @@ export const Route = createFileRoute("/api/public/hooks/daily-snapshot")({
       POST: async () => {
         const { data: players, error } = await supabaseAdmin
           .from("players")
-          .select("fid, alliance, power")
+          .select("fid, alliance, power, alliance_source, power_source")
           .eq("is_active", true);
         if (error) {
           return new Response(JSON.stringify({ ok: false, error: error.message }), {
@@ -34,6 +34,21 @@ export const Route = createFileRoute("/api/public/hooks/daily-snapshot")({
             continue;
           }
           const p = res.data;
+          const apiAlliance = p.alliance?.trim() || null;
+          const nextAlliance = apiAlliance ?? row.alliance;
+          const hasApiPower = p.power != null;
+          const nextPower = hasApiPower ? p.power : row.power;
+          const allianceSource = apiAlliance
+            ? "api"
+            : row.alliance
+              ? (row.alliance_source ?? "manual")
+              : null;
+          const powerSource = hasApiPower
+            ? "api"
+            : row.power != null
+              ? (row.power_source ?? "manual")
+              : null;
+
           await supabaseAdmin
             .from("players")
             .update({
@@ -41,6 +56,12 @@ export const Route = createFileRoute("/api/public/hooks/daily-snapshot")({
               state: p.kid,
               furnace_level: p.stove_lv,
               avatar_image: p.avatar_image ?? null,
+              alliance: nextAlliance,
+              power: nextPower,
+              alliance_source: allianceSource,
+              power_source: powerSource,
+              api_source: p.source,
+              api_profile: p.api_profile,
               last_checked_at: new Date().toISOString(),
               last_api_status: "ok",
             })
@@ -50,8 +71,12 @@ export const Route = createFileRoute("/api/public/hooks/daily-snapshot")({
             nickname: p.nickname,
             state: p.kid,
             furnace_level: p.stove_lv,
-            alliance: row.alliance,
-            power: row.power,
+            alliance: nextAlliance,
+            power: nextPower,
+            alliance_source: allianceSource,
+            power_source: powerSource,
+            api_source: p.source,
+            api_profile: p.api_profile,
           });
           ok++;
           // small delay to be polite to the WOS API

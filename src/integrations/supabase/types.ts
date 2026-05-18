@@ -59,6 +59,9 @@ export type Database = {
         Row: {
           added_by: string | null
           alliance: string | null
+          alliance_source: string | null
+          api_profile: Json
+          api_source: string | null
           avatar_image: string | null
           created_at: string
           fid: number
@@ -69,11 +72,15 @@ export type Database = {
           nickname: string | null
           notes: string | null
           power: number | null
+          power_source: string | null
           state: number | null
         }
         Insert: {
           added_by?: string | null
           alliance?: string | null
+          alliance_source?: string | null
+          api_profile?: Json
+          api_source?: string | null
           avatar_image?: string | null
           created_at?: string
           fid: number
@@ -84,11 +91,15 @@ export type Database = {
           nickname?: string | null
           notes?: string | null
           power?: number | null
+          power_source?: string | null
           state?: number | null
         }
         Update: {
           added_by?: string | null
           alliance?: string | null
+          alliance_source?: string | null
+          api_profile?: Json
+          api_source?: string | null
           avatar_image?: string | null
           created_at?: string
           fid?: number
@@ -99,6 +110,7 @@ export type Database = {
           nickname?: string | null
           notes?: string | null
           power?: number | null
+          power_source?: string | null
           state?: number | null
         }
         Relationships: []
@@ -106,32 +118,44 @@ export type Database = {
       snapshots: {
         Row: {
           alliance: string | null
+          alliance_source: string | null
+          api_profile: Json
+          api_source: string | null
           captured_at: string
           fid: number
           furnace_level: number | null
           id: string
           nickname: string | null
           power: number | null
+          power_source: string | null
           state: number | null
         }
         Insert: {
           alliance?: string | null
+          alliance_source?: string | null
+          api_profile?: Json
+          api_source?: string | null
           captured_at?: string
           fid: number
           furnace_level?: number | null
           id?: string
           nickname?: string | null
           power?: number | null
+          power_source?: string | null
           state?: number | null
         }
         Update: {
           alliance?: string | null
+          alliance_source?: string | null
+          api_profile?: Json
+          api_source?: string | null
           captured_at?: string
           fid?: number
           furnace_level?: number | null
           id?: string
           nickname?: string | null
           power?: number | null
+          power_source?: string | null
           state?: number | null
         }
         Relationships: [

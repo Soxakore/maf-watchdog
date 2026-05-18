@@ -38,7 +38,8 @@ function RosterPage() {
     onSuccess: (res) => {
       if (res.ok) {
         toast.success(`Added ${res.nickname} (state ${res.state})`);
-        setFid(""); setPower("");
+        setFid("");
+        setPower("");
         qc.invalidateQueries({ queryKey: ["players"] });
         qc.invalidateQueries({ queryKey: ["alerts-unread"] });
       } else {
@@ -60,7 +61,10 @@ function RosterPage() {
 
   const delMut = useMutation({
     mutationFn: (f: number) => del({ data: { fid: f } as never }),
-    onSuccess: () => { toast.success("Removed"); qc.invalidateQueries({ queryKey: ["players"] }); },
+    onSuccess: () => {
+      toast.success("Removed");
+      qc.invalidateQueries({ queryKey: ["players"] });
+    },
   });
 
   function onAdd(e: FormEvent) {
@@ -83,18 +87,38 @@ function RosterPage() {
       </div>
 
       <Card className="p-5">
-        <form onSubmit={onAdd} className="grid gap-3 md:grid-cols-[1fr_120px_140px_auto] md:items-end">
+        <form
+          onSubmit={onAdd}
+          className="grid gap-3 md:grid-cols-[1fr_120px_140px_auto] md:items-end"
+        >
           <div className="space-y-1.5">
             <Label htmlFor="fid">Player FID</Label>
-            <Input id="fid" required value={fid} onChange={(e) => setFid(e.target.value)} placeholder="e.g. 12345678" />
+            <Input
+              id="fid"
+              required
+              value={fid}
+              onChange={(e) => setFid(e.target.value)}
+              placeholder="e.g. 12345678"
+            />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="alliance">Alliance</Label>
-            <Input id="alliance" value={alliance} onChange={(e) => setAlliance(e.target.value)} placeholder="MAF" />
+            <Label htmlFor="alliance">Alliance fallback</Label>
+            <Input
+              id="alliance"
+              value={alliance}
+              onChange={(e) => setAlliance(e.target.value)}
+              placeholder="MAF"
+            />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="power">Power (opt.)</Label>
-            <Input id="power" type="number" value={power} onChange={(e) => setPower(e.target.value)} placeholder="0" />
+            <Label htmlFor="power">Power fallback</Label>
+            <Input
+              id="power"
+              type="number"
+              value={power}
+              onChange={(e) => setPower(e.target.value)}
+              placeholder="0"
+            />
           </div>
           <Button type="submit" disabled={addMut.isPending}>
             <Plus className="mr-1 size-4" /> {addMut.isPending ? "Fetching…" : "Track"}
@@ -118,10 +142,18 @@ function RosterPage() {
           </thead>
           <tbody className="divide-y divide-border">
             {isLoading && (
-              <tr><td colSpan={8} className="px-4 py-8 text-center text-muted-foreground">Loading…</td></tr>
+              <tr>
+                <td colSpan={8} className="px-4 py-8 text-center text-muted-foreground">
+                  Loading…
+                </td>
+              </tr>
             )}
             {!isLoading && players.length === 0 && (
-              <tr><td colSpan={8} className="px-4 py-8 text-center text-muted-foreground">No players tracked yet. Add one above.</td></tr>
+              <tr>
+                <td colSpan={8} className="px-4 py-8 text-center text-muted-foreground">
+                  No players tracked yet. Add one above.
+                </td>
+              </tr>
             )}
             {players.map((p) => {
               const offState = p.state != null && p.state !== 4285;
@@ -129,13 +161,19 @@ function RosterPage() {
               return (
                 <tr key={p.fid} className="hover:bg-secondary/30">
                   <td className="px-4 py-3 font-medium">
-                    <Link to="/player/$fid" params={{ fid: String(p.fid) }} className="hover:underline">
+                    <Link
+                      to="/player/$fid"
+                      params={{ fid: String(p.fid) }}
+                      className="hover:underline"
+                    >
                       {p.nickname ?? "—"}
                     </Link>
                   </td>
                   <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{p.fid}</td>
                   <td className="px-4 py-3">
-                    {p.state == null ? "—" : (
+                    {p.state == null ? (
+                      "—"
+                    ) : (
                       <Badge variant={offState ? "destructive" : "secondary"}>
                         {offState && <AlertTriangle className="mr-1 size-3" />}
                         {p.state}
@@ -145,14 +183,25 @@ function RosterPage() {
                   <td className="px-4 py-3 font-mono">{p.furnace_level ?? "—"}</td>
                   <td className="px-4 py-3">
                     {p.alliance ? (
-                      <Badge variant={offAlliance ? "destructive" : "default"}>{p.alliance}</Badge>
-                    ) : <span className="text-muted-foreground">—</span>}
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <Badge variant={offAlliance ? "destructive" : "default"}>
+                          {p.alliance}
+                        </Badge>
+                        {p.alliance_source && <Badge variant="outline">{p.alliance_source}</Badge>}
+                      </div>
+                    ) : (
+                      <span className="text-muted-foreground">—</span>
+                    )}
                   </td>
                   <td className="px-4 py-3 font-mono text-xs">
-                    {p.power ? p.power.toLocaleString() : "—"}
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <span>{p.power != null ? p.power.toLocaleString() : "—"}</span>
+                      {p.power_source && <Badge variant="outline">{p.power_source}</Badge>}
+                    </div>
                   </td>
                   <td className="px-4 py-3 text-xs text-muted-foreground">
                     {p.last_checked_at ? new Date(p.last_checked_at).toLocaleString() : "never"}
+                    {p.api_source && <div>{p.api_source}</div>}
                     {p.last_api_status && p.last_api_status !== "ok" && (
                       <div className="text-destructive">{p.last_api_status}</div>
                     )}
@@ -163,12 +212,19 @@ function RosterPage() {
                         <RefreshCw className="size-3.5" />
                       </Button>
                       <Link to="/player/$fid" params={{ fid: String(p.fid) }}>
-                        <Button size="icon" variant="ghost"><ExternalLink className="size-3.5" /></Button>
+                        <Button size="icon" variant="ghost">
+                          <ExternalLink className="size-3.5" />
+                        </Button>
                       </Link>
                       <Button
-                        size="icon" variant="ghost"
-                        onClick={() => { if (confirm(`Remove ${p.nickname}?`)) delMut.mutate(p.fid); }}
-                      ><Trash2 className="size-3.5" /></Button>
+                        size="icon"
+                        variant="ghost"
+                        onClick={() => {
+                          if (confirm(`Remove ${p.nickname}?`)) delMut.mutate(p.fid);
+                        }}
+                      >
+                        <Trash2 className="size-3.5" />
+                      </Button>
                     </div>
                   </td>
                 </tr>
