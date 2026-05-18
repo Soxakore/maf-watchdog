@@ -37,8 +37,8 @@ const POWER_TOKEN =
 
 function parsePowerValue(raw: string): number | null {
   const cleaned = raw.trim().toLowerCase();
-  const unit = cleaned.match(/\b(bn|billion|b|mil|million|mio|m|k)\b/)?.[1] ?? "";
-  const numberPart = cleaned.replace(/\b(bn|billion|b|mil|million|mio|m|k)\b/g, "").trim();
+  const unit = cleaned.match(/(bn|billion|b|mil|million|mio|m|k)\b/)?.[1] ?? "";
+  const numberPart = cleaned.replace(/(bn|billion|b|mil|million|mio|m|k)\b/g, "").trim();
 
   if (unit) {
     const decimal = numberPart.replace(/\s/g, "").replace(",", ".");
