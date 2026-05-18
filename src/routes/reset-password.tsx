@@ -17,16 +17,28 @@ function ResetPasswordPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
-  const [hashValid, setHashValid] = useState(true);
+  const [hashValid, setHashValid] = useState<boolean | null>(null);
 
   useEffect(() => {
-    // Supabase puts the recovery token in the URL hash as access_token + type=recovery
-    // The client automatically handles the hash; we just verify the session is present
-    supabase.auth.getSession().then(({ data }) => {
-      if (!data.session) {
-        setHashValid(false);
+    // Supabase processes the recovery hash asynchronously and fires PASSWORD_RECOVERY.
+    // Listen for it instead of checking getSession() immediately (which races the hash parse).
+    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "PASSWORD_RECOVERY" || (event === "SIGNED_IN" && session)) {
+        setHashValid(true);
       }
     });
+
+    // Fallback: after a short delay, check if a session was established
+    const timer = setTimeout(() => {
+      supabase.auth.getSession().then(({ data }) => {
+        setHashValid((prev) => (prev === null ? !!data.session : prev));
+      });
+    }, 1500);
+
+    return () => {
+      sub.subscription.unsubscribe();
+      clearTimeout(timer);
+    };
   }, []);
 
   async function onSubmit(e: FormEvent) {
