@@ -65,7 +65,15 @@ function ResetPasswordPage() {
     }
   }
 
-  if (!hashValid) {
+  if (hashValid === null) {
+    return (
+      <div className="flex min-h-screen items-center justify-center px-4">
+        <div className="text-sm text-muted-foreground">Verifying reset link…</div>
+      </div>
+    );
+  }
+
+  if (hashValid === false) {
     return (
       <div className="flex min-h-screen items-center justify-center px-4">
         <div className="w-full max-w-sm rounded-xl border border-border bg-card/60 p-8 backdrop-blur text-center">
