@@ -1,5 +1,6 @@
 // Snapshot + diffing logic. Server-only — uses any Supabase client (admin or user-scoped).
 import type { SupabaseClient } from "@supabase/supabase-js";
+import type { JsonObject } from "./wos.server";
 
 export const TARGET_STATE = 4285;
 export const TARGET_ALLIANCE = "MAF";
@@ -10,6 +11,10 @@ interface SnapshotInput {
   furnace_level: number | null;
   alliance: string | null;
   power: number | null;
+  alliance_source?: string | null;
+  power_source?: string | null;
+  api_source?: string | null;
+  api_profile?: JsonObject | null;
 }
 
 export async function snapshotAndDiff(
@@ -34,6 +39,10 @@ export async function snapshotAndDiff(
     furnace_level: next.furnace_level,
     alliance: next.alliance,
     power: next.power,
+    alliance_source: next.alliance_source ?? null,
+    power_source: next.power_source ?? null,
+    api_source: next.api_source ?? null,
+    api_profile: next.api_profile ?? {},
   });
 
   if (!prev) return;
