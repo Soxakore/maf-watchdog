@@ -40,7 +40,14 @@ export async function fetchWosPlayer(fid: number): Promise<WosPlayerResult> {
   try {
     const res = await fetch(WOS_PLAYER_URL, {
       method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        Accept: "application/json, text/plain, */*",
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36",
+        Origin: "https://wos-giftcode.centurygame.com",
+        Referer: "https://wos-giftcode.centurygame.com/",
+      },
       body: body.toString(),
     });
 
