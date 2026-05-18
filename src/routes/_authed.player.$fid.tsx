@@ -110,7 +110,7 @@ function PlayerPage() {
         </h2>
         <div className="grid gap-3 md:grid-cols-[140px_180px_1fr_auto] md:items-end">
           <div className="space-y-1.5">
-            <Label>Alliance fallback</Label>
+            <Label>Alliance</Label>
             <Input
               value={alliance}
               onChange={(e) => setAlliance(e.target.value)}
@@ -118,7 +118,7 @@ function PlayerPage() {
             />
           </div>
           <div className="space-y-1.5">
-            <Label>Power fallback</Label>
+            <Label>Power</Label>
             <Input type="number" value={power} onChange={(e) => setPower(e.target.value)} />
           </div>
           <div className="space-y-1.5">
@@ -129,10 +129,6 @@ function PlayerPage() {
             <Save className="mr-1.5 size-4" /> Save
           </Button>
         </div>
-        <p className="mt-2 text-xs text-muted-foreground">
-          API values update automatically when available. Fallbacks stay in place when the API does
-          not provide alliance or power.
-        </p>
       </Card>
 
       <div className="grid gap-4 lg:grid-cols-2">

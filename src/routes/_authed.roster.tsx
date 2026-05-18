@@ -1,17 +1,42 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState, type FormEvent } from "react";
-import { addPlayer, listPlayers, refreshPlayer, deletePlayer } from "@/lib/players.functions";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
+import {
+  addPlayer,
+  listPlayers,
+  refreshPlayer,
+  deletePlayer,
+  updateManualStats,
+} from "@/lib/players.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { RefreshCw, Trash2, ExternalLink, Plus, AlertTriangle } from "lucide-react";
+import { RefreshCw, Trash2, ExternalLink, Plus, AlertTriangle, Save } from "lucide-react";
 
 export const Route = createFileRoute("/_authed/roster")({ component: RosterPage });
+
+function parsePowerInput(value: string): number | null {
+  const trimmed = value.trim().toLowerCase().replace(/,/g, "").replace(/\s/g, "");
+  if (!trimmed) return null;
+
+  const match = trimmed.match(/^(\d+(?:\.\d+)?)([kmb])?$/);
+  if (!match) return Number.NaN;
+
+  const amount = Number(match[1]);
+  const multiplier =
+    match[2] === "b" ? 1_000_000_000 : match[2] === "m" ? 1_000_000 : match[2] === "k" ? 1_000 : 1;
+  return Math.round(amount * multiplier);
+}
+
+function powerChanged(draft: string, saved: number | null): boolean {
+  const parsed = parsePowerInput(draft);
+  if (Number.isNaN(parsed)) return true;
+  return parsed !== saved;
+}
 
 function RosterPage() {
   const qc = useQueryClient();
@@ -19,22 +44,41 @@ function RosterPage() {
   const add = useServerFn(addPlayer);
   const refresh = useServerFn(refreshPlayer);
   const del = useServerFn(deletePlayer);
+  const update = useServerFn(updateManualStats);
 
   const { data, isLoading } = useQuery({ queryKey: ["players"], queryFn: () => list() });
 
   const [fid, setFid] = useState("");
   const [alliance, setAlliance] = useState("MAF");
   const [power, setPower] = useState("");
+  const [powerDrafts, setPowerDrafts] = useState<Record<string, string>>({});
+  const players = useMemo(() => data?.players ?? [], [data?.players]);
+
+  useEffect(() => {
+    setPowerDrafts((current) => {
+      const next = { ...current };
+      for (const player of players) {
+        const key = String(player.fid);
+        if (!(key in next)) next[key] = player.power != null ? String(player.power) : "";
+      }
+      return next;
+    });
+  }, [players]);
 
   const addMut = useMutation({
-    mutationFn: (vars: { fid: string; alliance: string; power: string }) =>
-      add({
+    mutationFn: (vars: { fid: string; alliance: string; power: string }) => {
+      const parsedPower = parsePowerInput(vars.power);
+      if (Number.isNaN(parsedPower)) {
+        throw new Error("Power must be a number, or use K/M/B suffix.");
+      }
+      return add({
         data: {
           fid: vars.fid,
           alliance: vars.alliance || undefined,
-          power: vars.power ? Number(vars.power) : undefined,
+          power: parsedPower ?? undefined,
         } as never,
-      }),
+      });
+    },
     onSuccess: (res) => {
       if (res.ok) {
         toast.success(`Added ${res.nickname} (state ${res.state})`);
@@ -67,13 +111,41 @@ function RosterPage() {
     },
   });
 
+  const updatePowerMut = useMutation({
+    mutationFn: (vars: {
+      fid: number;
+      nickname: string | null;
+      alliance: string | null;
+      notes: string | null;
+      power: string;
+    }) => {
+      const parsedPower = parsePowerInput(vars.power);
+      if (Number.isNaN(parsedPower)) {
+        throw new Error("Power must be a number, or use K/M/B suffix.");
+      }
+
+      return update({
+        data: {
+          fid: vars.fid,
+          alliance: vars.alliance,
+          power: parsedPower,
+          notes: vars.notes,
+        } as never,
+      });
+    },
+    onSuccess: (_, vars) => {
+      toast.success(`Saved power for ${vars.nickname ?? `FID ${vars.fid}`}`);
+      qc.invalidateQueries({ queryKey: ["players"] });
+      qc.invalidateQueries({ queryKey: ["alerts-unread"] });
+    },
+    onError: (e) => toast.error((e as Error).message),
+  });
+
   function onAdd(e: FormEvent) {
     e.preventDefault();
     if (!fid) return;
     addMut.mutate({ fid, alliance, power });
   }
-
-  const players = data?.players ?? [];
 
   return (
     <div className="space-y-6">
@@ -102,7 +174,7 @@ function RosterPage() {
             />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="alliance">Alliance fallback</Label>
+            <Label htmlFor="alliance">Alliance</Label>
             <Input
               id="alliance"
               value={alliance}
@@ -111,13 +183,13 @@ function RosterPage() {
             />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="power">Power fallback</Label>
+            <Label htmlFor="power">Power</Label>
             <Input
               id="power"
-              type="number"
+              inputMode="decimal"
               value={power}
               onChange={(e) => setPower(e.target.value)}
-              placeholder="0"
+              placeholder="85M"
             />
           </div>
           <Button type="submit" disabled={addMut.isPending}>
@@ -158,6 +230,9 @@ function RosterPage() {
             {players.map((p) => {
               const offState = p.state != null && p.state !== 4285;
               const offAlliance = p.alliance && p.alliance !== "MAF";
+              const draftPower = powerDrafts[String(p.fid)] ?? "";
+              const parsedDraftPower = parsePowerInput(draftPower);
+              const invalidPower = Number.isNaN(parsedDraftPower);
               return (
                 <tr key={p.fid} className="hover:bg-secondary/30">
                   <td className="px-4 py-3 font-medium">
@@ -194,8 +269,40 @@ function RosterPage() {
                     )}
                   </td>
                   <td className="px-4 py-3 font-mono text-xs">
-                    <div className="flex flex-wrap items-center gap-1.5">
-                      <span>{p.power != null ? p.power.toLocaleString() : "—"}</span>
+                    <div className="flex min-w-44 flex-wrap items-center gap-1.5">
+                      <Input
+                        aria-label={`Power for ${p.nickname ?? `FID ${p.fid}`}`}
+                        className={`h-8 w-28 font-mono text-xs ${invalidPower ? "border-destructive" : ""}`}
+                        inputMode="decimal"
+                        value={draftPower}
+                        onChange={(e) =>
+                          setPowerDrafts((current) => ({
+                            ...current,
+                            [String(p.fid)]: e.target.value,
+                          }))
+                        }
+                        placeholder="—"
+                      />
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        disabled={
+                          updatePowerMut.isPending ||
+                          invalidPower ||
+                          !powerChanged(draftPower, p.power ?? null)
+                        }
+                        onClick={() =>
+                          updatePowerMut.mutate({
+                            fid: p.fid,
+                            nickname: p.nickname,
+                            alliance: p.alliance,
+                            notes: p.notes,
+                            power: draftPower,
+                          })
+                        }
+                      >
+                        <Save className="size-3.5" />
+                      </Button>
                       {p.power_source && <Badge variant="outline">{p.power_source}</Badge>}
                     </div>
                   </td>
