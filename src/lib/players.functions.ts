@@ -205,6 +205,79 @@ export const updateManualStats = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+export const bulkUpdatePowerStats = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z
+      .object({
+        updates: z
+          .array(
+            z.object({
+              fid: z.coerce.number().int().positive(),
+              power: z.coerce.number().int().nonnegative(),
+            }),
+          )
+          .min(1)
+          .max(150),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase } = context;
+    const fids = [...new Set(data.updates.map((row) => row.fid))];
+    const { data: existingRows, error } = await supabase
+      .from("players")
+      .select(
+        "fid, nickname, state, furnace_level, alliance, alliance_source, api_source, api_profile",
+      )
+      .in("fid", fids);
+    if (error) throw new Error(error.message);
+
+    const existingByFid = new Map((existingRows ?? []).map((row) => [row.fid, row]));
+    const results: Array<{ fid: number; ok: boolean; error?: string }> = [];
+
+    for (const update of data.updates) {
+      const existing = existingByFid.get(update.fid);
+      if (!existing) {
+        results.push({ fid: update.fid, ok: false, error: "Player not found" });
+        continue;
+      }
+
+      const { error: updateErr } = await supabase
+        .from("players")
+        .update({
+          power: update.power,
+          power_source: "ocr",
+        })
+        .eq("fid", update.fid);
+      if (updateErr) {
+        results.push({ fid: update.fid, ok: false, error: updateErr.message });
+        continue;
+      }
+
+      await snapshotAndDiff(supabase, update.fid, {
+        nickname: existing.nickname,
+        state: existing.state,
+        furnace_level: existing.furnace_level,
+        alliance: existing.alliance,
+        power: update.power,
+        alliance_source: existing.alliance_source,
+        power_source: "ocr",
+        api_source: existing.api_source,
+        api_profile: existing.api_profile ?? {},
+      });
+
+      results.push({ fid: update.fid, ok: true });
+    }
+
+    return {
+      ok: results.every((result) => result.ok),
+      updated: results.filter((result) => result.ok).length,
+      failed: results.filter((result) => !result.ok).length,
+      results,
+    };
+  });
+
 export const deletePlayer = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input) => z.object({ fid: z.coerce.number().int().positive() }).parse(input))

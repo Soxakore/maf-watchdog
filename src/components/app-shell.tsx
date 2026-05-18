@@ -1,5 +1,5 @@
 import { Link, useRouter } from "@tanstack/react-router";
-import { Snowflake, Users, Bell, LogOut } from "lucide-react";
+import { Snowflake, Users, Bell, LogOut, ScanText } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useServerFn } from "@tanstack/react-start";
@@ -58,6 +58,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   {unread}
                 </span>
               )}
+            </Link>
+            <Link
+              to="/power-import"
+              activeProps={{ className: "bg-secondary text-foreground" }}
+              className="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm text-muted-foreground hover:bg-secondary/60 hover:text-foreground"
+            >
+              <ScanText className="size-4" /> Import
             </Link>
             <button
               onClick={logout}

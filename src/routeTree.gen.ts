@@ -15,6 +15,7 @@ import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as AuthedRouteImport } from './routes/_authed'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthedRosterRouteImport } from './routes/_authed.roster'
+import { Route as AuthedPowerImportRouteImport } from './routes/_authed.power-import'
 import { Route as AuthedAlertsRouteImport } from './routes/_authed.alerts'
 import { Route as AuthedPlayerFidRouteImport } from './routes/_authed.player.$fid'
 import { Route as ApiPublicHooksDailySnapshotRouteImport } from './routes/api/public/hooks/daily-snapshot'
@@ -48,6 +49,11 @@ const AuthedRosterRoute = AuthedRosterRouteImport.update({
   path: '/roster',
   getParentRoute: () => AuthedRoute,
 } as any)
+const AuthedPowerImportRoute = AuthedPowerImportRouteImport.update({
+  id: '/power-import',
+  path: '/power-import',
+  getParentRoute: () => AuthedRoute,
+} as any)
 const AuthedAlertsRoute = AuthedAlertsRouteImport.update({
   id: '/alerts',
   path: '/alerts',
@@ -71,6 +77,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
   '/alerts': typeof AuthedAlertsRoute
+  '/power-import': typeof AuthedPowerImportRoute
   '/roster': typeof AuthedRosterRoute
   '/player/$fid': typeof AuthedPlayerFidRoute
   '/api/public/hooks/daily-snapshot': typeof ApiPublicHooksDailySnapshotRoute
@@ -81,6 +88,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
   '/alerts': typeof AuthedAlertsRoute
+  '/power-import': typeof AuthedPowerImportRoute
   '/roster': typeof AuthedRosterRoute
   '/player/$fid': typeof AuthedPlayerFidRoute
   '/api/public/hooks/daily-snapshot': typeof ApiPublicHooksDailySnapshotRoute
@@ -93,6 +101,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
   '/_authed/alerts': typeof AuthedAlertsRoute
+  '/_authed/power-import': typeof AuthedPowerImportRoute
   '/_authed/roster': typeof AuthedRosterRoute
   '/_authed/player/$fid': typeof AuthedPlayerFidRoute
   '/api/public/hooks/daily-snapshot': typeof ApiPublicHooksDailySnapshotRoute
@@ -105,6 +114,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/reset-password'
     | '/alerts'
+    | '/power-import'
     | '/roster'
     | '/player/$fid'
     | '/api/public/hooks/daily-snapshot'
@@ -115,6 +125,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/reset-password'
     | '/alerts'
+    | '/power-import'
     | '/roster'
     | '/player/$fid'
     | '/api/public/hooks/daily-snapshot'
@@ -126,6 +137,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/reset-password'
     | '/_authed/alerts'
+    | '/_authed/power-import'
     | '/_authed/roster'
     | '/_authed/player/$fid'
     | '/api/public/hooks/daily-snapshot'
@@ -184,6 +196,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedRosterRouteImport
       parentRoute: typeof AuthedRoute
     }
+    '/_authed/power-import': {
+      id: '/_authed/power-import'
+      path: '/power-import'
+      fullPath: '/power-import'
+      preLoaderRoute: typeof AuthedPowerImportRouteImport
+      parentRoute: typeof AuthedRoute
+    }
     '/_authed/alerts': {
       id: '/_authed/alerts'
       path: '/alerts'
@@ -210,12 +229,14 @@ declare module '@tanstack/react-router' {
 
 interface AuthedRouteChildren {
   AuthedAlertsRoute: typeof AuthedAlertsRoute
+  AuthedPowerImportRoute: typeof AuthedPowerImportRoute
   AuthedRosterRoute: typeof AuthedRosterRoute
   AuthedPlayerFidRoute: typeof AuthedPlayerFidRoute
 }
 
 const AuthedRouteChildren: AuthedRouteChildren = {
   AuthedAlertsRoute: AuthedAlertsRoute,
+  AuthedPowerImportRoute: AuthedPowerImportRoute,
   AuthedRosterRoute: AuthedRosterRoute,
   AuthedPlayerFidRoute: AuthedPlayerFidRoute,
 }
