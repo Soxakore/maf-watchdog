@@ -52,6 +52,45 @@ function MembersPage() {
         </p>
       </div>
 
+      {(() => {
+        const pending = (data?.members ?? []).filter((m) => m.roles.length === 0);
+        if (pending.length === 0) return null;
+        return (
+          <Card className="border-amber-500/40 bg-amber-500/5 p-0 overflow-hidden">
+            <div className="flex items-center justify-between border-b border-amber-500/30 px-4 py-2.5">
+              <div className="flex items-center gap-2 text-sm font-semibold">
+                <UserCheck className="size-4 text-amber-400" />
+                Pending approvals
+                <Badge variant="secondary">{pending.length}</Badge>
+              </div>
+              <p className="text-xs text-muted-foreground">These users signed up and are waiting for access.</p>
+            </div>
+            <ul className="divide-y divide-border">
+              {pending.map((m) => (
+                <li key={m.id} className="flex items-center justify-between gap-3 px-4 py-3">
+                  <div className="min-w-0">
+                    <div className="truncate text-sm font-medium">{m.email}</div>
+                    <div className="text-xs text-muted-foreground">
+                      Signed up {new Date(m.created_at).toLocaleString()}
+                    </div>
+                  </div>
+                  <div className="flex gap-1.5">
+                    <Button size="sm" disabled={mut.isPending}
+                      onClick={() => mut.mutate({ userId: m.id, role: "member", grant: true })}>
+                      <UserCheck className="mr-1 size-3.5" /> Approve
+                    </Button>
+                    <Button size="sm" variant="outline" disabled={mut.isPending}
+                      onClick={() => mut.mutate({ userId: m.id, role: "admin", grant: true })}>
+                      <Shield className="mr-1 size-3.5" /> Make admin
+                    </Button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </Card>
+        );
+      })()}
+
       <Card className="overflow-hidden p-0">
         <table className="w-full text-sm">
           <thead className="bg-secondary/50 text-left text-xs uppercase tracking-wide text-muted-foreground">

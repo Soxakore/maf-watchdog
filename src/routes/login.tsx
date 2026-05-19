@@ -82,7 +82,7 @@ function LoginPage() {
           onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
           className="mt-4 w-full text-center text-xs text-muted-foreground hover:text-foreground"
         >
-          {mode === "signin" ? "First time? Create admin account" : "Have an account? Sign in"}
+          {mode === "signin" ? "Create account" : "Have an account? Sign in"}
         </button>
       </div>
     </div>
