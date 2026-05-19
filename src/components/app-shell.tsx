@@ -74,6 +74,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 </span>
               )}
             </Link>
+            {isAdmin && (
+              <Link
+                to="/members"
+                activeProps={{ className: "bg-secondary text-foreground" }}
+                className="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm text-muted-foreground hover:bg-secondary/60 hover:text-foreground"
+              >
+                <Shield className="size-4" /> Members
+              </Link>
+            )}
             <button
               onClick={logout}
               title={email ?? ""}
