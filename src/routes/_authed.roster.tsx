@@ -162,9 +162,11 @@ function RosterPage() {
                       <Button size="icon" variant="ghost" onClick={() => refreshMut.mutate(p.fid)}>
                         <RefreshCw className="size-3.5" />
                       </Button>
-                      <Link to="/player/$fid" params={{ fid: String(p.fid) }}>
-                        <Button size="icon" variant="ghost"><ExternalLink className="size-3.5" /></Button>
-                      </Link>
+                      <Button size="icon" variant="ghost" asChild>
+                        <Link to="/player/$fid" params={{ fid: String(p.fid) }}>
+                          <ExternalLink className="size-3.5" />
+                        </Link>
+                      </Button>
                       <Button
                         size="icon" variant="ghost"
                         onClick={() => { if (confirm(`Remove ${p.nickname}?`)) delMut.mutate(p.fid); }}
