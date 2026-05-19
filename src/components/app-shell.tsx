@@ -1,10 +1,11 @@
 import { Link, useRouter } from "@tanstack/react-router";
-import { Snowflake, Users, Bell, LogOut } from "lucide-react";
+import { Snowflake, Users, Bell, LogOut, Shield } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { listAlerts } from "@/lib/players.functions";
+import { getMyAccess } from "@/lib/members.functions";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -14,13 +15,27 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     supabase.auth.getUser().then(({ data }) => setEmail(data.user?.email ?? null));
   }, []);
 
+  const access = useServerFn(getMyAccess);
+  const me = useQuery({ queryKey: ["my-access"], queryFn: () => access() });
+  const isApproved = me.data?.isApproved === true;
+  const isAdmin = me.data?.isAdmin === true;
+
   const fetchAlerts = useServerFn(listAlerts);
   const { data } = useQuery({
     queryKey: ["alerts-unread"],
     queryFn: () => fetchAlerts(),
     refetchInterval: 60_000,
+    enabled: isApproved,
   });
   const unread = (data?.alerts ?? []).filter((a) => !a.is_read).length;
+
+  useEffect(() => {
+    if (me.isLoading || me.isError) return;
+    const path = router.state.location.pathname;
+    if (!isApproved && path !== "/pending") {
+      router.navigate({ to: "/pending" });
+    }
+  }, [isApproved, me.isLoading, me.isError, router]);
 
   async function logout() {
     await supabase.auth.signOut();
@@ -59,6 +74,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 </span>
               )}
             </Link>
+            {isAdmin && (
+              <Link
+                to="/members"
+                activeProps={{ className: "bg-secondary text-foreground" }}
+                className="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm text-muted-foreground hover:bg-secondary/60 hover:text-foreground"
+              >
+                <Shield className="size-4" /> Members
+              </Link>
+            )}
             <button
               onClick={logout}
               title={email ?? ""}
