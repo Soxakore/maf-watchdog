@@ -1,4 +1,4 @@
-import { useMemo, useId } from "react";
+import { useMemo, useId, useRef, useState } from "react";
 import { Waves } from "lucide-react";
 
 export type FlowSeries = {
@@ -16,6 +16,8 @@ export type FlowGraphProps = {
   subtitle?: string;
   /** x-axis labels, same length as each series.values */
   labels: string[];
+  /** optional richer labels (e.g. full timestamps) shown in hover tooltip */
+  tooltipLabels?: string[];
   series: FlowSeries[];
   height?: number;
 };
