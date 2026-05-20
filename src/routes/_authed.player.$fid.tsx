@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, RefreshCw, Save } from "lucide-react";
 import { toast } from "sonner";
+import { FlowGraph } from "@/components/flow-graph";
 
 export const Route = createFileRoute("/_authed/player/$fid")({ component: PlayerPage });
 
@@ -110,6 +111,35 @@ function PlayerPage() {
           The public WOS API doesn't return alliance/power. Update manually — changes are diffed against history.
         </p>
       </Card>
+
+      {(() => {
+        const chrono = [...data.snapshots].reverse();
+        const labels = chrono.map((s) => {
+          const d = new Date(s.captured_at);
+          return `${d.getMonth() + 1}/${d.getDate()}`;
+        });
+        return (
+          <FlowGraph
+            title="Player Progress"
+            subtitle={`${chrono.length} snapshots · power & furnace over time`}
+            labels={labels}
+            series={[
+              {
+                label: "Power",
+                color: "hsl(180 80% 55%)",
+                values: chrono.map((s) => (s.power ? Number(s.power) : null)),
+                format: (v) => (v >= 1e6 ? `${(v / 1e6).toFixed(2)}M` : v.toLocaleString()),
+              },
+              {
+                label: "Furnace",
+                color: "hsl(270 80% 65%)",
+                values: chrono.map((s) => (s.furnace_level ?? null)),
+                format: (v) => `FC ${v}`,
+              },
+            ]}
+          />
+        );
+      })()}
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Card className="p-0">
