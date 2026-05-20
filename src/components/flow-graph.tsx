@@ -51,10 +51,13 @@ export function FlowGraph({
   title = "Flow Graph",
   subtitle = "Multi-metric over time",
   labels,
+  tooltipLabels,
   series,
   height = 360,
 }: FlowGraphProps) {
   const uid = useId();
+  const svgRef = useRef<SVGSVGElement | null>(null);
+  const [hoverIdx, setHoverIdx] = useState<number | null>(null);
   const H = height;
   const innerW = W - PAD_L - PAD_R;
   const innerH = H - PAD_T - PAD_B;
