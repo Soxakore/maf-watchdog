@@ -118,11 +118,13 @@ function PlayerPage() {
           const d = new Date(s.captured_at);
           return `${d.getMonth() + 1}/${d.getDate()}`;
         });
+        const tooltipLabels = chrono.map((s) => new Date(s.captured_at).toLocaleString());
         return (
           <FlowGraph
             title="Player Progress"
             subtitle={`${chrono.length} snapshots · power & furnace over time`}
             labels={labels}
+            tooltipLabels={tooltipLabels}
             series={[
               {
                 label: "Power",
