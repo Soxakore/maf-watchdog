@@ -46,7 +46,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     <div className="min-h-screen">
       <header className="border-b border-border/60 bg-background/40 backdrop-blur sticky top-0 z-10">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
-          <Link to="/" className="flex items-center gap-2">
+          <Link to="/roster" className="flex items-center gap-2">
             <Snowflake className="size-5 text-primary" />
             <span className="font-semibold tracking-tight">MAF Tracker</span>
             <span className="ml-2 rounded bg-secondary px-1.5 py-0.5 text-[10px] font-mono text-muted-foreground">
@@ -55,8 +55,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </Link>
           <nav className="flex items-center gap-1">
             <Link
-              to="/"
-              activeOptions={{ exact: true }}
+              to="/roster"
               activeProps={{ className: "bg-secondary text-foreground" }}
               className="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm text-muted-foreground hover:bg-secondary/60 hover:text-foreground"
             >
