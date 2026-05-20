@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, RefreshCw, Save } from "lucide-react";
 import { toast } from "sonner";
+import { FlowGraph } from "@/components/flow-graph";
 
 export const Route = createFileRoute("/_authed/player/$fid")({ component: PlayerPage });
 
