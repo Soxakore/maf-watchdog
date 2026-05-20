@@ -112,6 +112,35 @@ function PlayerPage() {
         </p>
       </Card>
 
+      {(() => {
+        const chrono = [...data.snapshots].reverse();
+        const labels = chrono.map((s) => {
+          const d = new Date(s.captured_at);
+          return `${d.getMonth() + 1}/${d.getDate()}`;
+        });
+        return (
+          <FlowGraph
+            title="Player Progress"
+            subtitle={`${chrono.length} snapshots · power & furnace over time`}
+            labels={labels}
+            series={[
+              {
+                label: "Power",
+                color: "hsl(180 80% 55%)",
+                values: chrono.map((s) => (s.power ? Number(s.power) : null)),
+                format: (v) => (v >= 1e6 ? `${(v / 1e6).toFixed(2)}M` : v.toLocaleString()),
+              },
+              {
+                label: "Furnace",
+                color: "hsl(270 80% 65%)",
+                values: chrono.map((s) => (s.furnace_level ?? null)),
+                format: (v) => `FC ${v}`,
+              },
+            ]}
+          />
+        );
+      })()}
+
       <div className="grid gap-4 lg:grid-cols-2">
         <Card className="p-0">
           <h2 className="border-b border-border px-4 py-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">Snapshot history</h2>
