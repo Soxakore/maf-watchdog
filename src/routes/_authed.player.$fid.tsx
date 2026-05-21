@@ -27,6 +27,12 @@ function PlayerPage() {
     queryFn: () => fetchHistory({ data: { fid: Number(fid) } as never }),
   });
 
+  const fetchEvents = useServerFn(getPlayerEventStats);
+  const { data: eventsData } = useQuery({
+    queryKey: ["player-events", fid],
+    queryFn: () => fetchEvents({ data: { fid: Number(fid) } as never }),
+  });
+
   const [alliance, setAlliance] = useState("");
   const [power, setPower] = useState("");
   const [notes, setNotes] = useState("");
