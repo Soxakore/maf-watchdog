@@ -1,5 +1,5 @@
 import { Link, useRouter } from "@tanstack/react-router";
-import { Snowflake, Users, Bell, LogOut, Shield } from "lucide-react";
+import { Snowflake, Users, Bell, LogOut, Shield, Flame } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useServerFn } from "@tanstack/react-start";
@@ -60,6 +60,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               className="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm text-muted-foreground hover:bg-secondary/60 hover:text-foreground"
             >
               <Users className="size-4" /> Roster
+            </Link>
+            <Link
+              to="/events"
+              activeProps={{ className: "bg-secondary text-foreground" }}
+              className="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm text-muted-foreground hover:bg-secondary/60 hover:text-foreground"
+            >
+              <Flame className="size-4" /> Events
             </Link>
             <Link
               to="/alerts"

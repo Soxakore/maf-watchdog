@@ -17,6 +17,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthedRosterRouteImport } from './routes/_authed.roster'
 import { Route as AuthedPendingRouteImport } from './routes/_authed.pending'
 import { Route as AuthedMembersRouteImport } from './routes/_authed.members'
+import { Route as AuthedEventsRouteImport } from './routes/_authed.events'
 import { Route as AuthedAlertsRouteImport } from './routes/_authed.alerts'
 import { Route as AuthedPlayerFidRouteImport } from './routes/_authed.player.$fid'
 import { Route as ApiPublicHooksDailySnapshotRouteImport } from './routes/api/public/hooks/daily-snapshot'
@@ -60,6 +61,11 @@ const AuthedMembersRoute = AuthedMembersRouteImport.update({
   path: '/members',
   getParentRoute: () => AuthedRoute,
 } as any)
+const AuthedEventsRoute = AuthedEventsRouteImport.update({
+  id: '/events',
+  path: '/events',
+  getParentRoute: () => AuthedRoute,
+} as any)
 const AuthedAlertsRoute = AuthedAlertsRouteImport.update({
   id: '/alerts',
   path: '/alerts',
@@ -83,6 +89,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
   '/alerts': typeof AuthedAlertsRoute
+  '/events': typeof AuthedEventsRoute
   '/members': typeof AuthedMembersRoute
   '/pending': typeof AuthedPendingRoute
   '/roster': typeof AuthedRosterRoute
@@ -95,6 +102,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
   '/alerts': typeof AuthedAlertsRoute
+  '/events': typeof AuthedEventsRoute
   '/members': typeof AuthedMembersRoute
   '/pending': typeof AuthedPendingRoute
   '/roster': typeof AuthedRosterRoute
@@ -109,6 +117,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
   '/_authed/alerts': typeof AuthedAlertsRoute
+  '/_authed/events': typeof AuthedEventsRoute
   '/_authed/members': typeof AuthedMembersRoute
   '/_authed/pending': typeof AuthedPendingRoute
   '/_authed/roster': typeof AuthedRosterRoute
@@ -123,6 +132,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/reset-password'
     | '/alerts'
+    | '/events'
     | '/members'
     | '/pending'
     | '/roster'
@@ -135,6 +145,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/reset-password'
     | '/alerts'
+    | '/events'
     | '/members'
     | '/pending'
     | '/roster'
@@ -148,6 +159,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/reset-password'
     | '/_authed/alerts'
+    | '/_authed/events'
     | '/_authed/members'
     | '/_authed/pending'
     | '/_authed/roster'
@@ -222,6 +234,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedMembersRouteImport
       parentRoute: typeof AuthedRoute
     }
+    '/_authed/events': {
+      id: '/_authed/events'
+      path: '/events'
+      fullPath: '/events'
+      preLoaderRoute: typeof AuthedEventsRouteImport
+      parentRoute: typeof AuthedRoute
+    }
     '/_authed/alerts': {
       id: '/_authed/alerts'
       path: '/alerts'
@@ -248,6 +267,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthedRouteChildren {
   AuthedAlertsRoute: typeof AuthedAlertsRoute
+  AuthedEventsRoute: typeof AuthedEventsRoute
   AuthedMembersRoute: typeof AuthedMembersRoute
   AuthedPendingRoute: typeof AuthedPendingRoute
   AuthedRosterRoute: typeof AuthedRosterRoute
@@ -256,6 +276,7 @@ interface AuthedRouteChildren {
 
 const AuthedRouteChildren: AuthedRouteChildren = {
   AuthedAlertsRoute: AuthedAlertsRoute,
+  AuthedEventsRoute: AuthedEventsRoute,
   AuthedMembersRoute: AuthedMembersRoute,
   AuthedPendingRoute: AuthedPendingRoute,
   AuthedRosterRoute: AuthedRosterRoute,

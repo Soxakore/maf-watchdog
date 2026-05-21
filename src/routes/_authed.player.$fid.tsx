@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, RefreshCw, Save } from "lucide-react";
 import { toast } from "sonner";
 import { FlowGraph } from "@/components/flow-graph";
+import { getPlayerEventStats } from "@/lib/events.functions";
 
 export const Route = createFileRoute("/_authed/player/$fid")({ component: PlayerPage });
 
@@ -24,6 +25,12 @@ function PlayerPage() {
   const { data, isLoading } = useQuery({
     queryKey: ["player", fid],
     queryFn: () => fetchHistory({ data: { fid: Number(fid) } as never }),
+  });
+
+  const fetchEvents = useServerFn(getPlayerEventStats);
+  const { data: eventsData } = useQuery({
+    queryKey: ["player-events", fid],
+    queryFn: () => fetchEvents({ data: { fid: Number(fid) } as never }),
   });
 
   const [alliance, setAlliance] = useState("");
@@ -192,6 +199,38 @@ function PlayerPage() {
           </div>
         </Card>
       </div>
+
+      <Card className="p-0">
+        <h2 className="border-b border-border px-4 py-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+          Event participation
+        </h2>
+        <div className="max-h-80 overflow-auto">
+          <ul className="divide-y divide-border">
+            {(eventsData?.attendance ?? []).map((a) => {
+              const ev = (a as { events?: { name: string; event_type: string; occurred_at: string } | null }).events;
+              return (
+                <li key={a.id} className="flex items-center justify-between px-4 py-3 text-sm">
+                  <div>
+                    <div className="font-medium">{ev?.name ?? "Event"}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {ev?.event_type} · {ev?.occurred_at ? new Date(ev.occurred_at).toLocaleString() : ""}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    {a.score != null && <span className="font-mono text-xs text-muted-foreground">{a.score.toLocaleString()}</span>}
+                    <Badge variant={a.participated ? "default" : "secondary"}>
+                      {a.participated ? "Attended" : "Missed"}
+                    </Badge>
+                  </div>
+                </li>
+              );
+            })}
+            {(!eventsData || eventsData.attendance.length === 0) && (
+              <li className="px-4 py-6 text-center text-sm text-muted-foreground">No event records yet.</li>
+            )}
+          </ul>
+        </div>
+      </Card>
     </div>
   );
 }
