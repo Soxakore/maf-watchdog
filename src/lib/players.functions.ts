@@ -158,7 +158,34 @@ export const listPlayers = createServerFn({ method: "GET" })
       .select("*")
       .order("nickname", { ascending: true });
     if (error) throw new Error(error.message);
-    return { players: data ?? [] };
+
+    // Weekly power growth: compare current player.power to oldest snapshot within last 7 days
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+    const fids = (data ?? []).map((p) => p.fid);
+    const growth: Record<number, { pct: number | null; from: number | null }> = {};
+    if (fids.length) {
+      const { data: snaps } = await context.supabase
+        .from("snapshots")
+        .select("fid, power, captured_at")
+        .in("fid", fids)
+        .gte("captured_at", sevenDaysAgo)
+        .not("power", "is", null)
+        .order("captured_at", { ascending: true });
+      for (const s of snaps ?? []) {
+        if (!growth[s.fid] && s.power) {
+          growth[s.fid] = { pct: null, from: Number(s.power) };
+        }
+      }
+    }
+    const players = (data ?? []).map((p) => {
+      const g = growth[p.fid];
+      let pct: number | null = null;
+      if (g?.from && p.power) {
+        pct = ((Number(p.power) - g.from) / g.from) * 100;
+      }
+      return { ...p, growth_pct_7d: pct };
+    });
+    return { players };
   });
 
 export const getPlayerHistory = createServerFn({ method: "GET" })
