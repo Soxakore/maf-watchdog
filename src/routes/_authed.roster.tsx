@@ -112,16 +112,17 @@ function RosterPage() {
               <th className="px-4 py-2.5">Furnace</th>
               <th className="px-4 py-2.5">Alliance</th>
               <th className="px-4 py-2.5">Power</th>
+              <th className="px-4 py-2.5">7d Δ</th>
               <th className="px-4 py-2.5">Last check</th>
               <th className="px-4 py-2.5"></th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
             {isLoading && (
-              <tr><td colSpan={8} className="px-4 py-8 text-center text-muted-foreground">Loading…</td></tr>
+              <tr><td colSpan={9} className="px-4 py-8 text-center text-muted-foreground">Loading…</td></tr>
             )}
             {!isLoading && players.length === 0 && (
-              <tr><td colSpan={8} className="px-4 py-8 text-center text-muted-foreground">No players tracked yet. Add one above.</td></tr>
+              <tr><td colSpan={9} className="px-4 py-8 text-center text-muted-foreground">No players tracked yet. Add one above.</td></tr>
             )}
             {players.map((p) => {
               const offState = p.state != null && p.state !== 4285;
@@ -150,6 +151,14 @@ function RosterPage() {
                   </td>
                   <td className="px-4 py-3 font-mono text-xs">
                     {p.power ? p.power.toLocaleString() : "—"}
+                  </td>
+                  <td className="px-4 py-3 font-mono text-xs">
+                    {(() => {
+                      const g = (p as { growth_pct_7d?: number | null }).growth_pct_7d;
+                      if (g == null) return <span className="text-muted-foreground">—</span>;
+                      const cls = g > 0.5 ? "text-emerald-400" : g < -0.5 ? "text-destructive" : "text-muted-foreground";
+                      return <span className={cls}>{g >= 0 ? "+" : ""}{g.toFixed(1)}%</span>;
+                    })()}
                   </td>
                   <td className="px-4 py-3 text-xs text-muted-foreground">
                     {p.last_checked_at ? new Date(p.last_checked_at).toLocaleString() : "never"}
