@@ -55,6 +55,74 @@ export type Database = {
           },
         ]
       }
+      event_attendance: {
+        Row: {
+          created_at: string
+          event_id: string
+          fid: number
+          id: string
+          notes: string | null
+          participated: boolean
+          score: number | null
+        }
+        Insert: {
+          created_at?: string
+          event_id: string
+          fid: number
+          id?: string
+          notes?: string | null
+          participated?: boolean
+          score?: number | null
+        }
+        Update: {
+          created_at?: string
+          event_id?: string
+          fid?: number
+          id?: string
+          notes?: string | null
+          participated?: boolean
+          score?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_attendance_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      events: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          event_type: string
+          id: string
+          name: string
+          notes: string | null
+          occurred_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          event_type: string
+          id?: string
+          name: string
+          notes?: string | null
+          occurred_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          event_type?: string
+          id?: string
+          name?: string
+          notes?: string | null
+          occurred_at?: string
+        }
+        Relationships: []
+      }
       players: {
         Row: {
           added_by: string | null
