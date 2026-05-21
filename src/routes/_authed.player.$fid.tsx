@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, RefreshCw, Save } from "lucide-react";
 import { toast } from "sonner";
 import { FlowGraph } from "@/components/flow-graph";
+import { getPlayerEventStats } from "@/lib/events.functions";
 
 export const Route = createFileRoute("/_authed/player/$fid")({ component: PlayerPage });
 
